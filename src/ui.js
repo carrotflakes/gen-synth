@@ -16,7 +16,7 @@ function fmtPct(v) { return Math.round(v * 100) + '%'; }
 function refresh() {
   const P = state.P;
   $('vDecay').textContent = fmtPct(P.decay);
-  $('vTone').textContent = P.tone < 0.5 ? '明るい' : P.tone > 0.5 ? '暗い' : '標準';
+  $('vTone').textContent = P.tone > 0.5 ? '明るい' : P.tone < 0.5 ? '暗い' : '標準';
   $('vPos').textContent = fmtPct(P.pos * 2);
   $('vRev').textContent = fmtPct(P.rev);
   $('vBody').textContent = fmtPct(P.body);
