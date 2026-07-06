@@ -17,7 +17,7 @@ function onMidi(e) {
   if (cmd === 0x90 && v > 0) {
     const i = frettedBase(note);
     const freq = noteFreq(note);                 // exact target pitch (tuning-aware, chromatic via fretting)
-    playString(i, freq, note, Math.max(0.05, v / 127));
+    playString(i, freq, Math.max(0.05, v / 127));
   }
   // note-off ignored — a plucked string rings out on its own
 }

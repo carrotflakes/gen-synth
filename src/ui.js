@@ -1,7 +1,7 @@
 // コンソール UI — スライダー・チップ(音階 / 材質 / オプション)・自動演奏・ヒント
 import { SCALES, MATERIALS, AUTOPLAY_PATTERNS, AUTOPLAY_INTERVAL_MS } from './config.js';
 import { state } from './state.js';
-import { ensureAudio, retuneSymp, setReverb, setBody, setSize, setSymp } from './audio/engine.js';
+import { ensureAudio, syncParams, syncPans, syncStrings, setReverb, setBody, setSize } from './audio/engine.js';
 import { buildStrings, pluck } from './instrument.js';
 
 const $ = id => document.getElementById(id);
@@ -26,28 +26,31 @@ function refresh() {
 
 function setupSliders() {
   const P = state.P;
-  $('decay').oninput = e => { P.decay = +e.target.value; refresh(); };
-  $('tone').oninput = e => { P.tone = +e.target.value; refresh(); };
-  $('pos').oninput = e => { P.pos = +e.target.value; refresh(); };
+  // decay/tone/pos/symp は弦バンクのループ係数なので、鳴っている弦にも即座に効く
+  $('decay').oninput = e => { P.decay = +e.target.value; syncParams(); refresh(); };
+  $('tone').oninput = e => { P.tone = +e.target.value; syncParams(); refresh(); };
+  $('pos').oninput = e => { P.pos = +e.target.value; syncParams(); refresh(); };
   $('rev').oninput = e => { P.rev = +e.target.value; setReverb(P.rev); refresh(); };
   $('body').oninput = e => { P.body = +e.target.value; setBody(P.body); refresh(); };
   $('size').oninput = e => { P.size = +e.target.value; setSize(P.size); refresh(); };
-  $('symp').oninput = e => { P.symp = +e.target.value; setSymp(P.symp); refresh(); };
+  $('symp').oninput = e => { P.symp = +e.target.value; syncParams(); refresh(); };
 }
 
 function setupOptions() {
   $('pan').onclick = e => {
     const on = e.target.getAttribute('aria-pressed') !== 'true';
     e.target.setAttribute('aria-pressed', on); state.panWidth = on ? 0.85 : 0;
+    syncPans();
   };
   $('course').onclick = e => {
     const on = e.target.getAttribute('aria-pressed') !== 'true';
     e.target.setAttribute('aria-pressed', on); state.courseOn = on;
+    syncStrings();   // 相方の弦を張る / 外す
   };
   $('ji').onclick = e => {
     const on = e.target.getAttribute('aria-pressed') !== 'true';
     e.target.setAttribute('aria-pressed', on); state.tuning = on ? 'ji' : 'et';
-    buildStrings(); retuneSymp();
+    buildStrings();
   };
 }
 
@@ -58,7 +61,7 @@ function setupScaleChips() {
     b.className = 'chip'; b.textContent = name.split(' ')[0];
     b.setAttribute('aria-pressed', name === state.scaleName);
     b.onclick = () => {
-      state.scaleName = name; buildStrings(); retuneSymp();
+      state.scaleName = name; buildStrings();
       [...sc.children].forEach((c, i) => c.setAttribute('aria-pressed', Object.keys(SCALES)[i] === name));
     };
     sc.appendChild(b);
@@ -73,6 +76,7 @@ function setupMaterialChips() {
     b.setAttribute('aria-pressed', idx === state.mat);
     b.onclick = () => {
       state.mat = idx;
+      syncParams();   // 材質は弦のループ係数なので、鳴っている弦の音色も変わる
       [...mc.children].forEach((c, i) => c.setAttribute('aria-pressed', i === idx));
     };
     mc.appendChild(b);

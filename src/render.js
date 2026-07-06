@@ -48,12 +48,14 @@ function frame() {
   }
   ctx2d.globalCompositeOperation = 'source-over';
 
-  // strings
+  // strings — 振幅は音声エンジンが返す実 RMS (s.level) から作るので、
+  // 共鳴で本当に振動している弦だけが震える
+  const base = Math.min(46, W * 0.06);
   for (const s of state.strings) {
-    const age = now - s.t0;
-    s.amp = s.amp0 * Math.exp(-age / s.tau);
+    const target = base * Math.min(1, Math.pow((s.level || 0) * 5, 0.65));  // 弱い共鳴も見えるよう圧縮
+    s.amp += (target - s.amp) * 0.25;
     const active = s.amp > 0.4;
-    const disp = active ? s.amp * Math.sin(2 * Math.PI * s.wv * age + s.phase) : 0;
+    const disp = active ? s.amp * Math.sin(2 * Math.PI * s.wv * now + s.phase) : 0;
     const fr = active ? s.fret : 0;                 // fretted fraction (0 = open, whole string)
 
     // glow layer when ringing
