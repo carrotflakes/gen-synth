@@ -10,6 +10,12 @@ function nearest(px) {
   return { i: best, d: bd };
 }
 
+// ポインタの y を弦上の位置(0=上端, 1=下端)に変換 — 撥弦位置に使う
+function fracY(y) {
+  const { top, bot } = state.view;
+  return (y - top) / (bot - top || 1);
+}
+
 export function setupPointer(cv) {
   let down = false, lastIdx = -1, lastX = 0, lastT = 0;
   function pos(e) {
@@ -20,7 +26,7 @@ export function setupPointer(cv) {
   function onDown(e) {
     e.preventDefault(); down = true; dismissHint();
     const p = pos(e); lastX = p.x; lastT = performance.now();
-    const n = nearest(p.x); if (n.d < 34) { pluck(n.i, 1); lastIdx = n.i; }
+    const n = nearest(p.x); if (n.d < 34) { pluck(n.i, 1, fracY(p.y)); lastIdx = n.i; }
   }
   function onMove(e) {
     if (!down) return; e.preventDefault();
@@ -28,7 +34,7 @@ export function setupPointer(cv) {
     const n = nearest(p.x);
     if (n.d < 34 && n.i !== lastIdx) {
       const dt = Math.max(8, t - lastT), spd = Math.abs(p.x - lastX) / dt;
-      pluck(n.i, Math.min(1, 0.45 + spd * 0.5)); lastIdx = n.i;
+      pluck(n.i, Math.min(1, 0.45 + spd * 0.5), fracY(p.y)); lastIdx = n.i;
     }
     lastX = p.x; lastT = t;
   }

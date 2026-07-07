@@ -105,9 +105,11 @@ export class StringBank {
     if (s.idx >= N) s.idx = 0;
 
     // excitation: comb-filtered noise (pluck position) + attack-softening lowpass
+    // m.pos が来ればその撥弦だけ位置を上書き(ポインタの高さ由来)。無ければスライダー値。
+    const pos = m.pos ?? q.pos;
     const noise = new Float32Array(N);
     for (let i = 0; i < N; i++) noise[i] = Math.random() * 2 - 1;
-    const d = Math.max(1, Math.round(q.pos * N));
+    const d = Math.max(1, Math.round(pos * N));
     const exc = new Float32Array(N); let peak = 1e-6;
     for (let i = 0; i < N; i++) { exc[i] = noise[i] - noise[(i + d) % N]; peak = Math.max(peak, Math.abs(exc[i])); }
     if (q.soft > 0) {

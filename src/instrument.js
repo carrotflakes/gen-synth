@@ -32,20 +32,30 @@ export function layout() {
 // Open string: pluck(i) plays strings[i] at its own pitch. playString can also sound
 // a *higher* target pitch on a lower string — like fretting: the finger shortens the
 // vibrating length, so only the part below the fret rings.
-export function pluck(i, vel = 1) {
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+// 弦上の位置 t(0=上端アンカー, 1=下端アンカー)→ 撥弦位置(端からの距離)。
+// 端ほど細く明るく、中央ほど太い。レンジは「弾く位置」スライダーと同じ。
+const fracToPos = t => clamp(Math.min(t, 1 - t), 0.04, 0.5);
+
+export function pluck(i, vel = 1, frac) {
   const s = state.strings[i]; if (!s) return;
-  playString(i, s.freq, vel);
+  playString(i, s.freq, vel, frac);
 }
 
-export function playString(i, freq, vel = 1) {
+// frac: ポインタで弾いた弦上の高さ。渡されればその撥弦の音色と光の位置を
+// そこから決める。無ければ音色はスライダーの「弾く位置」に従い、光は
+// 振動区間(フレットから下)の中央で咲く。
+export function playString(i, freq, vel = 1, frac) {
   const s = state.strings[i]; if (!s) return;
   const fretFrac = Math.max(0, 1 - s.freq / freq);   // 0 = open; →1 as the note climbs the string
   s.phase = Math.random() * 6.28;
   s.fret = fretFrac;
+  const t = frac != null ? clamp(frac, 0, 1) : fretFrac + (1 - fretFrac) * 0.5;
   state.ripples.push({
     x: s.x,
-    y: stringTop() + (stringBot() - stringTop()) * (fretFrac + (1 - fretFrac) * 0.5),
+    y: stringTop() + (stringBot() - stringTop()) * t,
     r: 6, a: 0.7, vel,
   });
-  pluckNote(i, freq, vel);
+  pluckNote(i, freq, vel, frac != null ? fracToPos(t) : undefined);
 }

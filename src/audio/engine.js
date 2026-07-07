@@ -76,12 +76,12 @@ export function syncParams() {
 }
 
 // 弦 i に freq(フレット奏法なら開放弦より高い)の励起を注入する
-export function pluckNote(i, freq, vel) {
+export function pluckNote(i, freq, vel, pos) {
   ensureAudio().then(() => {
     resumeAudio();
-    send({ t: 'pluck', i, freq, vel });
+    send({ t: 'pluck', i, freq, vel, pos });
     if (state.courseOn) {
-      send({ t: 'pluck', i: state.strings.length + i, freq: freq * Math.pow(2, 7 / 1200), vel: vel * 0.78 });
+      send({ t: 'pluck', i: state.strings.length + i, freq: freq * Math.pow(2, 7 / 1200), vel: vel * 0.78, pos });
     }
   });
 }
