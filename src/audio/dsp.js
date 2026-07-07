@@ -7,20 +7,18 @@
 // AudioWorklet (ks-processor.js) と ScriptProcessor フォールバック (engine.js) の
 // 両方から使う。DOM や AudioContext には依存しないこと。
 
-// ブリッジ結合の最大強度(共鳴パラメータ symp=1 のときのブレンド率)。
-// 結合は恒等写像とエネルギー保存型ブリッジ接合(Householder 反射 (2/n)Σ−x)の
-// ブレンドで行う。直交行列の凸結合はスペクトルノルム ≤ 1 なので、各弦の
-// ループゲイン g < 1 と合わせて結合系は構造的に発振できない。
-// (素朴な c·Σ 注入は同相モードの固有値が 1 を超えて発散する — 実測済み)
+// ブリッジ結合の最大強度(共鳴パラメータ symp=1 のときの β)。
+// 各弦の書き戻しからブリッジ平均を引く: x_i − (β/n)Σx。結合行列
+// I − (β/n)J は対称で固有値が {1−β(同相), 1, …, 1} なので、β ≤ 2 なら
+// ノルム ≤ 1 — ループゲイン g < 1 と合わせて構造的に発振できない。
+// 符号が重要: +(β/n)Σ だと同相モードの固有値が 1+(n−1)β/n を超えて発散する
+// (物理的にもブリッジの反射は反転)。
 //
-// 接合は直交成分に 1−2c の損失を 1 周期ごとに与えるため、そのままでは
-// ソースの減衰まで大きく削れる(c=0.06 で T60 4.5s → 0.4s を実測)。
-// retune() でループゲインを g/(1−2c·COMP) に補償してソースの鳴りを保つ。
-// 補償後もノルム上界は GMAX < 1 のままなので発振はしない。
-// COMP を 1 より僅かに下げて接合損失を少し残すことで、補償が生む
-// 減衰しきらない微小な残滓(-50dB 程度で数分残る)に自然な減衰を与える。
-const COUPLING = 0.01;
-const COMP = 0.9;
+// ソース弦自身の損失は β/n / 周期で、他弦への転送量と同じオーダー。
+// 以前使っていた Householder ブレンド接合は転送量の n 倍の損失を与えるため
+// ループゲイン補償が必要で、長い減衰では補償が上限に当たって音が縮んでいた。
+// この形なら補償なしで減衰時間がほぼ保たれる。
+const COUPLING = 0.08;
 const GMAX = 0.99995;
 
 // 撥弦時に既存の振動へ掛ける減衰 — 指や爪が触れた瞬間、前の振動は一部止まる
@@ -61,7 +59,7 @@ export class StringBank {
   // 鳴っている最中の弦にも即座に効く。
   setParams(m) {
     Object.assign(this.params, m.params);
-    this.c = this.params.symp * COUPLING;   // retune() の損失補償が参照するので先に
+    this.c = this.params.symp * COUPLING;
     for (const s of this.strings) this.retune(s, s.freq);
   }
 
@@ -80,8 +78,7 @@ export class StringBank {
     const q = this.params;
     const T60 = 0.28 * Math.pow(48, q.decay) * q.decayMul;
     s.freq = freq;
-    // ブリッジ接合の損失を補償して T60 を保つ(上限 GMAX で常に安定)
-    s.g = Math.min(GMAX, Math.pow(10, -3 / (freq * T60)) / (1 - 2 * this.c * COMP));
+    s.g = Math.min(GMAX, Math.pow(10, -3 / (freq * T60)));
     s.S = clamp01(0.5 + 0.49 * (q.tone + q.toneAdd + s.velTone));
     s.k = q.k;
     // ループ内フィルタの低域位相遅延を差し引いて遅延線に割り当てる:
@@ -144,11 +141,11 @@ export class StringBank {
         L[i] += cur * s.gL; R[i] += cur * s.gR;
         s.energy += cur * cur;
       }
-      // pass 2: ブリッジ接合 (1−c)·x + c·((2/n)Σ − x) を通して書き戻す
-      const j = 2 * sum / n;
+      // pass 2: ブリッジ接合 x − (β/n)Σx を通して書き戻す
+      const j = c * sum / n;
       for (let m = 0; m < n; m++) {
         const s = SS[m];
-        s.line[s.idx] = s.g * ((1 - 2 * c) * tns[m] + c * j);
+        s.line[s.idx] = s.g * (tns[m] - j);
         s.idx = s.idx + 1 >= s.N ? 0 : s.idx + 1;
       }
     }
