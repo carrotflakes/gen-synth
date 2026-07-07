@@ -75,6 +75,9 @@ export function syncParams() {
   });
 }
 
+// 全弦を掌で抑える / 離す(押している間だけ減衰が速くなる)
+export function setMute(on) { if (ready) send({ t: 'mute', on }); }
+
 // 弦 i に freq(フレット奏法なら開放弦より高い)の励起を注入する
 export function pluckNote(i, freq, vel, pos) {
   ensureAudio().then(() => {

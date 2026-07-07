@@ -24,6 +24,13 @@ const GMAX = 0.99995;
 // 撥弦時に既存の振動へ掛ける減衰 — 指や爪が触れた瞬間、前の振動は一部止まる
 const TOUCH_DAMP = 0.35;
 
+// ミュート(掌で弦を抑える)中にループゲインへ掛ける追加減衰。
+// ループゲイン g と同じく「弦ループ 1 周あたり」の係数なので、サンプル単位より
+// ずっと強い値が要る: 0.5 なら 110Hz の弦で T60 ≈ 90ms、高い弦ほど速く消える
+// (周回が速いぶん物理的にもそうなる)。遅延線は生きているので、抑えたまま
+// 弾くとスタッカートになる。
+const MUTE_G = 0.5;
+
 const clamp01 = v => Math.max(0, Math.min(1, v));
 
 export class StringBank {
@@ -34,7 +41,11 @@ export class StringBank {
     this.levels = new Float32Array(0);
     this.tns = new Float32Array(0);   // per-sample scratch: filtered loop signal of each string
     this.c = 0;                       // effective bridge blend
+    this.muteG = 1;                   // 1 = open, MUTE_G = palm-muted
   }
+
+  // m.on: 全弦を抑える / 離す。抑えている間だけ減衰が速くなる。
+  mute(m) { this.muteG = m.on ? MUTE_G : 1; }
 
   // 弦の張り替え(初期化・音階/調律/複弦の変更)。遅延線は作り直される。
   // m.strings: [{freq, gL, gR}]
@@ -126,7 +137,7 @@ export class StringBank {
     L.fill(0); if (R !== L) R.fill(0);
     const SS = this.strings, c = this.c, n = SS.length, len = L.length;
     if (!n) return;
-    const tns = this.tns;
+    const tns = this.tns, mg = this.muteG;
     for (let i = 0; i < len; i++) {
       // pass 1: 各弦のループ信号を読み、フィルタを通す
       let sum = 0;
@@ -147,7 +158,7 @@ export class StringBank {
       const j = c * sum / n;
       for (let m = 0; m < n; m++) {
         const s = SS[m];
-        s.line[s.idx] = s.g * (tns[m] - j);
+        s.line[s.idx] = s.g * mg * (tns[m] - j);
         s.idx = s.idx + 1 >= s.N ? 0 : s.idx + 1;
       }
     }

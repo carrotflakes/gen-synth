@@ -2,6 +2,7 @@
 import { KEYS } from './config.js';
 import { state } from './state.js';
 import { pluck } from './instrument.js';
+import { setMute } from './audio/engine.js';
 import { dismissHint } from './ui.js';
 
 function nearest(px) {
@@ -48,7 +49,15 @@ export function setupPointer(cv) {
 export function setupKeyboard() {
   addEventListener('keydown', e => {
     if (e.repeat) return;
+    if (e.code === 'Space') {
+      e.preventDefault();          // フォーカス中のチップの誤クリックやスクロールを防ぐ
+      setMute(true);               // 押している間、掌で全弦を抑える
+      return;
+    }
     const k = KEYS.indexOf(e.key.toLowerCase());
     if (k >= 0 && k < state.strings.length) { pluck(k, 0.95); dismissHint(); }
+  });
+  addEventListener('keyup', e => {
+    if (e.code === 'Space') setMute(false);
   });
 }
