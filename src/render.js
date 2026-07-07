@@ -1,14 +1,18 @@
 // Canvas 描画 — 弦・撥弦の光・フレット表示のフレームループ
 import { state, currentMaterial } from './state.js';
 
-let cv = null, ctx2d = null;
+let cv = null, ctx2d = null, headerEl = null, consoleEl = null;
 
-export const stringTop = () => state.view.H * 0.10;
-export const stringBot = () => state.view.H * 0.90;
+// 弦の描画領域は、ヘッダーと下部コンソールの実寸を避けた「空き帯」に収める。
+// これで音名ラベル(下端)がコントロールに隠れない。
+export const stringTop = () => state.view.top;
+export const stringBot = () => state.view.bot;
 
 export function initRenderer(canvas) {
   cv = canvas;
   ctx2d = canvas.getContext('2d');
+  headerEl = document.querySelector('header');
+  consoleEl = document.getElementById('console');
 }
 
 export function resizeRenderer() {
@@ -17,6 +21,13 @@ export function resizeRenderer() {
   v.W = innerWidth; v.H = innerHeight;
   cv.width = v.W * v.DPR; cv.height = v.H * v.DPR;
   ctx2d.setTransform(v.DPR, 0, 0, v.DPR, 0, 0);
+
+  const headH = headerEl ? headerEl.offsetHeight : 0;
+  const consH = consoleEl ? consoleEl.offsetHeight : 0;
+  const minTop = v.H * 0.10;                       // 上端の最低マージン
+  v.top = Math.max(minTop, headH + 20);
+  v.bot = Math.min(v.H * 0.94, v.H - consH - 26);  // 26 = 音名ラベル(bot+18)の逃げ
+  if (v.bot - v.top < v.H * 0.3) v.bot = v.top + v.H * 0.3;  // 極端に潰れないよう下限
 }
 
 export function startRenderLoop() {

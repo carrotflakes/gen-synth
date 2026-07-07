@@ -21,3 +21,8 @@ setupPointer(cv);
 setupKeyboard();
 setupMidi(document.getElementById('midi'));
 startRenderLoop();
+
+// コンソールはチップ生成や折り返しで高さが変わるので、変化のたびに描画領域を再計算する
+if (window.ResizeObserver) {
+  new ResizeObserver(resize).observe(document.getElementById('console'));
+}

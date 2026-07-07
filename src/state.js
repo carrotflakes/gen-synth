@@ -14,7 +14,7 @@ export const state = {
   // synthesis / effects parameters (sliders)
   P: { decay: 0.62, tone: 0.5, pos: 0.22, rev: 0.34, body: 0.5, size: 0.5, symp: 0.4 },
 
-  view: { W: 0, H: 0, DPR: 1 },
+  view: { W: 0, H: 0, DPR: 1, top: 0, bot: 0 },
 };
 
 export const currentMaterial = () => MATERIALS[state.mat];
