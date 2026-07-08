@@ -10,7 +10,8 @@
   --teal:#4fd6c4;        /* UI accent, deliberate cool counterpoint */
   --panel:rgba(28,22,15,.72);
 }
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;
+  -webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
   font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
   overflow:hidden;overscroll-behavior:none}
