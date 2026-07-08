@@ -18,32 +18,35 @@ function fracY(y) {
 }
 
 export function setupPointer(cv) {
-  let down = false, lastIdx = -1, lastX = 0, lastT = 0;
+  // ポインタ(指/マウス/ペン)ごとに独立した状態を持ち、マルチタッチで同時撥弦できるようにする
+  const active = new Map(); // pointerId -> { lastIdx, lastX, lastT }
   function pos(e) {
     const r = cv.getBoundingClientRect();
-    const t = e.touches ? e.touches[0] : e;
-    return { x: t.clientX - r.left, y: t.clientY - r.top };
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
   }
   function onDown(e) {
-    e.preventDefault(); down = true; dismissHint();
-    const p = pos(e); lastX = p.x; lastT = performance.now();
-    const n = nearest(p.x); if (n.d < 34) { pluck(n.i, 1, fracY(p.y)); lastIdx = n.i; }
+    e.preventDefault(); dismissHint();
+    const p = pos(e);
+    const st = { lastIdx: -1, lastX: p.x, lastT: performance.now() };
+    active.set(e.pointerId, st);
+    const n = nearest(p.x); if (n.d < 34) { pluck(n.i, 1, fracY(p.y)); st.lastIdx = n.i; }
   }
   function onMove(e) {
-    if (!down) return; e.preventDefault();
+    const st = active.get(e.pointerId); if (!st) return;
+    e.preventDefault();
     const p = pos(e), t = performance.now();
     const n = nearest(p.x);
-    if (n.d < 34 && n.i !== lastIdx) {
-      const dt = Math.max(8, t - lastT), spd = Math.abs(p.x - lastX) / dt;
-      pluck(n.i, Math.min(1, 0.45 + spd * 0.5), fracY(p.y)); lastIdx = n.i;
+    if (n.d < 34 && n.i !== st.lastIdx) {
+      const dt = Math.max(8, t - st.lastT), spd = Math.abs(p.x - st.lastX) / dt;
+      pluck(n.i, Math.min(1, 0.45 + spd * 0.5), fracY(p.y)); st.lastIdx = n.i;
     }
-    lastX = p.x; lastT = t;
+    st.lastX = p.x; st.lastT = t;
   }
-  function onUp() { down = false; lastIdx = -1; }
-  cv.addEventListener('mousedown', onDown); addEventListener('mousemove', onMove); addEventListener('mouseup', onUp);
-  cv.addEventListener('touchstart', onDown, { passive: false });
-  cv.addEventListener('touchmove', onMove, { passive: false });
-  addEventListener('touchend', onUp);
+  function onUp(e) { active.delete(e.pointerId); }
+  cv.addEventListener('pointerdown', onDown);
+  addEventListener('pointermove', onMove);
+  addEventListener('pointerup', onUp);
+  addEventListener('pointercancel', onUp);
 }
 
 export function setupKeyboard() {
