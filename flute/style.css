@@ -73,6 +73,12 @@ input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--te
 
 .status{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
   font:400 13px/1.4 sans-serif;color:var(--text-muted)}
+.chip{padding:7px 14px;font:400 11px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;
+  color:var(--silver);background:linear-gradient(180deg,var(--bg2),#0e151c);
+  border:1px solid var(--line);border-radius:999px;cursor:pointer;transition:.1s}
+.chip:hover{border-color:var(--teal);color:var(--ink)}
+.chip[aria-pressed="true"]{color:var(--bg);background:var(--teal);border-color:var(--teal);
+  box-shadow:0 0 12px rgba(79,214,196,.4)}
 #noteOut{font-weight:500;color:var(--text-secondary)}
 
 /* hint */

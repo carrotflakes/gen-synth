@@ -28,6 +28,7 @@ export class Flute {
   // 発音開始。freq を設定し息を立ち上げる。
   // 既に鳴っている最中(レガート)は旧管長を覚えておき、process 内で
   // 旧 → 新のタップをクロスフェードして繋ぐ。無音からは即座に切り替える。
+  // m.vel(0..1、省略時 1)は息の強さ — エンベロープの目標値として圧力に効く。
   note(m) {
     if (this.env >= 0.01 && m.freq !== this.freq) {
       this.prevFreq = this.freq;
@@ -36,7 +37,7 @@ export class Flute {
       this.xf = 1;
     }
     this.freq = m.freq;
-    this.target = 1;
+    this.target = m.vel ?? 1;
   }
 
   // 発音停止(息を下げる。管の共鳴は自然に減衰する)。

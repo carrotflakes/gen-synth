@@ -16,10 +16,10 @@ function send(m) {
 // 現在の state.P を worklet に反映(未初期化なら初期化時に反映される)
 export function syncParams() { if (ready) send({ t: 'setParams', params: { ...state.P } }); }
 
-// 発音 / 消音
-export function noteOn(freq) {
+// 発音 / 消音。vel(0..1)は息の強さで、省略時は最大。
+export function noteOn(freq, vel = 1) {
   state.freq = freq;
-  ensureAudio().then(() => { resumeAudio(); send({ t: 'note', freq }); });
+  ensureAudio().then(() => { resumeAudio(); send({ t: 'note', freq, vel }); });
 }
 export function noteOff() { send({ t: 'off' }); }
 
