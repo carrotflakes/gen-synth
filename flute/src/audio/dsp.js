@@ -99,7 +99,7 @@ export class Flute {
       this.bore[this.bi] = jet + 0.5 * refl;
       this.bi = (this.bi + 1) % LEN;
 
-      out[i] = boreOut * 0.4;
+      out[i] = boreOut * 0.1;
     }
   }
 }
