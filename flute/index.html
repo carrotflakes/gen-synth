@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<!-- 笛 — waveguide physical modeling flute -->
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>笛 — 物理モデル管楽器</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2 class="sr-only">ウェーブガイド物理モデルによるフルート音源。鍵盤を押すと音が鳴り、息のノイズ量やビブラートなどを調整できます。</h2>
+
+<header>
+  <div class="brand">
+    <h1>笛</h1><span class="rom">fue · flute</span>
+  </div>
+  <div class="tag">物理モデル音源 <b>digital waveguide</b><br>管とジェットを遅延線で模したフルート。<br>息のノイズが自励振動へと育つ。</div>
+</header>
+
+<main>
+  <div class="rack">
+    <div class="knob"><label>息のノイズ <b id="breathOut">—</b></label>
+      <input id="breath" type="range" min="0" max="30" step="1" value="8"></div>
+    <div class="knob"><label>ビブラート <b id="vibOut">—</b></label>
+      <input id="vib" type="range" min="0" max="100" step="1" value="25"></div>
+    <div class="knob"><label>ジェット比 <b id="jetOut">—</b></label>
+      <input id="jet" type="range" min="20" max="60" step="1" value="45"></div>
+    <div class="knob"><label>息の強さ <b id="presOut">—</b></label>
+      <input id="pres" type="range" min="60" max="120" step="1" value="95"></div>
+  </div>
+
+  <div class="songs">
+    <span class="songs-label">自動演奏</span>
+    <span id="songs" class="songs-list"></span>
+  </div>
+
+  <div id="kb" class="keys"></div>
+
+  <div class="status">
+    <span id="status">鍵盤を押すと音声が有効になります</span>
+    <span id="noteOut"></span>
+  </div>
+</main>
+
+<div class="hint" id="hint"><div class="card">
+  <div class="k">◦ ◦ ◦ ◦ ◦ ◦ ◦</div>
+  <div class="big">息をふきこむ</div>
+  <div class="sub">鍵盤をクリック / タップ、またはキー <b>A S D F G H J K L</b> で吹鳴。押している間だけ鳴る。</div>
+</div></div>
+
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
